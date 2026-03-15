@@ -1,0 +1,9 @@
+[package]
+name = "metro5-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { workspace = true }
+async-trait = "0.1.89"
+thiserror.workspace = true
