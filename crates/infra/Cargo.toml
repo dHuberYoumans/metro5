@@ -1,0 +1,13 @@
+[package]
+name = "metro5-infra"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { workspace = true }
+app = { workspace = true }
+tokio = { version = "1.49.0", features = ["full"] }
+crossterm = { version = "0.29.0",  features = ["event-stream"] }
+futures = "0.3"
+async-trait = "0.1.89"
+thiserror.workspace = true
