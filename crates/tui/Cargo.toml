@@ -1,0 +1,14 @@
+[package]
+name = "metro5-tui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { workspace = true }
+app = { workspace = true }
+infra = { workspace = true }
+tokio = { version = "1.49.0", features = ["full"] }
+ratatui = "0.30.0"
+crossterm = "0.29.0"
+strip-ansi-escapes = "0.2"
+thiserror.workspace = true
