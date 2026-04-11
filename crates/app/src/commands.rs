@@ -55,6 +55,9 @@ pub enum AppCommand {
     SendToMetro(String),
     SetFilter(Filter),
     ResetFilter,
+    SetQuery(String),
+    ClearState,
+    ResetQuery,
     QuitApp,
 }
 
@@ -78,6 +81,15 @@ impl FromStr for AppCommand {
                 match arg.parse::<LogLevel>() {
                     Ok(log_level) => Ok(AppCommand::SetFilter(Filter::Level(log_level))),
                     Err(_) => Err(ApplicationError::Domain(DomainError::InvalidFilter)),
+                }
+            }
+            // TODO needed?
+            Some("search") => {
+                let query = parts.collect::<Vec<&str>>().join(" ");
+                if query.is_empty() {
+                    Ok(AppCommand::ResetQuery)
+                } else {
+                    Ok(AppCommand::SetQuery(query))
                 }
             }
             _ => Err(ApplicationError::UnknownCommand),

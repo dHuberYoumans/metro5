@@ -38,6 +38,14 @@ async fn run(
                     app.apply_filter();
                 }
                 AppCommand::ResetFilter => app.reset_filter(),
+                AppCommand::SetQuery(query) => {
+                    app.set_query(query);
+                    app.apply_query();
+                }
+                AppCommand::ResetQuery => app.reset_query(),
+                AppCommand::ClearState => {
+                    app.clear_state();
+                }
                 AppCommand::QuitApp => break,
             }
         };

@@ -1,4 +1,4 @@
-use crate::{commands::*, errors::ApplicationError, events::AppEvent};
+use crate::{commands::*, errors::ApplicationError, events::AppEvent, queries::Query};
 use domain::{
     entities::*,
     parse_log,
@@ -8,14 +8,16 @@ use domain::{
 #[derive(Debug, PartialEq)]
 pub enum Mode {
     Normal,
+    Search,
     Command,
 }
 
 pub struct App {
     pub logs: Vec<LogEntry>,
-    pub filtered: Vec<LogEntry>,
     pub filter: Option<Filter>,
-    pub query: Option<String>,
+    pub filtered: Vec<LogEntry>,
+    pub query: Query,
+    pub query_result: Vec<LogEntry>,
     pub mode: Mode,
     pub command: Command,
 }
@@ -24,9 +26,10 @@ impl App {
     pub fn new() -> Self {
         App {
             logs: Vec::new(),
-            filtered: Vec::new(),
             filter: None,
-            query: None,
+            filtered: Vec::new(),
+            query: Query::new(),
+            query_result: Vec::new(),
             mode: Mode::Normal,
             command: Command::new(),
         }
@@ -52,11 +55,22 @@ impl App {
     }
 
     pub fn set_query(&mut self, query: String) {
-        self.query = Some(query)
+        self.query.set(query)
     }
 
     pub fn reset_query(&mut self) {
-        self.query = None
+        self.query.clear();
+    }
+
+    pub fn clear_state(&mut self) {
+        self.reset_query();
+        self.reset_filter();
+    }
+
+    pub fn apply_query(&mut self) {
+        if let Some(result) = self.query.apply(&self.logs) {
+            self.query_result = result;
+        }
     }
 
     pub fn handle_process_event(
@@ -91,7 +105,7 @@ impl App {
             Key::Backspace => self.handle_backspace(),
             Key::Esc => self.handle_esc(),
             Key::Enter => {
-                if self.mode == Mode::Command {
+                if matches!(self.mode, Mode::Command | Mode::Search) {
                     self.handle_enter()
                 } else {
                     Ok(None)
@@ -102,37 +116,68 @@ impl App {
     }
 
     fn handle_backspace(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
+        //trim leading : resp leading /
         if self.mode == Mode::Command {
-            self.command.raw.pop();
+            if self.command.raw[1..].is_empty() {
+                self.mode = Mode::Normal;
+            } else {
+                self.command.raw.pop();
+            }
         };
-        if self.command.raw.is_empty() {
-            self.mode = Mode::Normal;
-        };
+        if self.mode == Mode::Search {
+            if self.query.raw[1..].is_empty() {
+                self.mode = Mode::Normal;
+            } else {
+                self.query.raw.pop();
+                self.apply_query();
+                return Ok(Some(AppCommand::SetQuery(
+                    self.query.get().unwrap().to_string(),
+                )));
+            }
+        }
         Ok(None)
     }
 
     fn handle_esc(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
-        self.mode = Mode::Normal;
-        self.command.clear();
+        if self.mode == Mode::Normal {
+            return Ok(Some(AppCommand::ClearState));
+        } else {
+            self.command.clear();
+            self.query.clear();
+            self.mode = Mode::Normal;
+        }
         Ok(None)
     }
 
     fn handle_enter(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
+        let mut cmd: Option<AppCommand> = None;
+        if self.mode == Mode::Command {
+            cmd = self.command.get_cmd();
+            self.command.clear();
+        } else if self.mode == Mode::Search {
+            if let Some(query) = self.query.get() {
+                cmd = Some(AppCommand::SetQuery(query.to_string()));
+            };
+            self.query.clear();
+        }
         self.mode = Mode::Normal;
-        let cmd = self.command.get_cmd();
-        self.command.clear();
         Ok(cmd)
     }
 
     fn handle_char_input(&mut self, ch: char) -> Result<Option<AppCommand>, ApplicationError> {
-        if self.mode != Mode::Command {
+        if !matches!(self.mode, Mode::Command | Mode::Search) {
             match ch {
                 'r' | 'j' | 'd' => {
                     return Ok(Some(AppCommand::SendToMetro(ch.to_string())));
                 }
-                ':' | '/' => {
+                ':' => {
                     self.mode = Mode::Command;
-                    self.command.raw = ch.to_string();
+                    self.command.raw = ":".to_string();
+                    return Ok(None);
+                }
+                '/' => {
+                    self.mode = Mode::Search;
+                    self.query.raw = "/".to_string();
                     return Ok(None);
                 }
                 _ => return Ok(None),
@@ -140,6 +185,13 @@ impl App {
         }
         if self.mode == Mode::Command {
             self.command.raw.push(ch);
+        }
+        if self.mode == Mode::Search {
+            self.query.raw.push(ch);
+            self.apply_query();
+            return Ok(Some(AppCommand::SetQuery(
+                self.query.get().unwrap().to_string(),
+            )));
         }
         Ok(None)
     }
@@ -216,5 +268,14 @@ mod tests {
         let cmd = "unkown".parse::<AppCommand>();
         assert!(cmd.is_err());
         assert!(matches!(cmd.unwrap_err(), ApplicationError::UnknownCommand));
+    }
+
+    #[test]
+    fn it_should_set_query() {
+        let query = "this is a query".to_string();
+        assert_eq!(
+            query.parse::<AppCommand>().unwrap(),
+            AppCommand::SetQuery(query)
+        )
     }
 }

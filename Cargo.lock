@@ -720,6 +720,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "metro5"
+version = "0.1.0"
+dependencies = [
+ "metro5-app",
+ "metro5-domain",
+ "metro5-infra",
+ "metro5-tui",
+ "thiserror 2.0.18",
+ "tokio",
+]
+
+[[package]]
 name = "metro5-app"
 version = "0.1.0"
 dependencies = [

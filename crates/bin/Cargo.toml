@@ -5,7 +5,7 @@ edition = "2024"
 
 [[bin]]
 name = "metro5"
-path = src/main.rs
+path = "src/main.rs"
 
 [dependencies]
 domain = { workspace = true }
