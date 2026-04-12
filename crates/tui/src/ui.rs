@@ -2,7 +2,7 @@ use crate::styles::{level_style, search_result_style};
 use app::app::{App, Mode};
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     prelude::Position,
     text::{Line, Span},
     widgets::Clear,
@@ -14,34 +14,48 @@ use crate::widgets::*;
 pub fn render(frame: &mut Frame, app: &App) {
     let logs = get_logs(app);
     let paragraph = main_window(logs);
-    if app.mode == Mode::Command {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(1), Constraint::Length(3)])
-            .split(frame.area());
-        frame.render_widget(Clear, frame.area());
-        frame.render_widget(paragraph, chunks[0]);
-        frame.render_widget(commandline(app), chunks[1]);
-        frame.set_cursor_position(Position {
-            x: chunks[1].x + app.command.get_raw_len() as u16 + 1,
-            y: chunks[1].y + 1,
-        });
-    } else if app.mode == Mode::Search {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(1), Constraint::Length(3)])
-            .split(frame.area());
-        frame.render_widget(Clear, frame.area());
-        frame.render_widget(paragraph, chunks[0]);
-        frame.render_widget(commandline(app), chunks[1]);
-        frame.set_cursor_position(Position {
-            x: chunks[1].x + app.query.get_raw_len() as u16 + 1,
-            y: chunks[1].y + 1,
-        });
-    } else {
-        frame.render_widget(Clear, frame.area());
-        frame.render_widget(paragraph, frame.area());
-    };
+    match app.mode {
+        Mode::Command => {
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(1), Constraint::Length(3)])
+                .split(frame.area());
+            frame.render_widget(Clear, frame.area());
+            frame.render_widget(paragraph, chunks[0]);
+            frame.render_widget(commandline(app), chunks[1]);
+            frame.set_cursor_position(Position {
+                x: chunks[1].x + app.command.get_raw_len() as u16 + 1,
+                y: chunks[1].y + 1,
+            });
+        }
+        Mode::Search => {
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(1), Constraint::Length(3)])
+                .split(frame.area());
+            frame.render_widget(Clear, frame.area());
+            frame.render_widget(paragraph, chunks[0]);
+            frame.render_widget(commandline(app), chunks[1]);
+            frame.set_cursor_position(Position {
+                x: chunks[1].x + app.query.get_raw_len() as u16 + 1,
+                y: chunks[1].y + 1,
+            });
+        }
+        Mode::Help => {
+            let area = centered_rect(30, 25, frame.area());
+            let help = help_block();
+            frame.render_widget(help, area);
+        }
+        Mode::Manual => {
+            let area = centered_rect(50, 25, frame.area());
+            let man = man_block();
+            frame.render_widget(man, area);
+        }
+        _ => {
+            frame.render_widget(Clear, frame.area());
+            frame.render_widget(paragraph, frame.area());
+        }
+    }
 }
 
 fn get_logs(app: &App) -> Vec<Line<'_>> {
@@ -85,4 +99,23 @@ fn highlighted_search<'a>(message: &'a str, pattern: &str) -> Vec<Span<'a>> {
         }
     }
     line
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, rect: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(rect);
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }

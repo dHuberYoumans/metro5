@@ -47,6 +47,8 @@ async fn run(
                     app.clear_state();
                 }
                 AppCommand::QuitApp => break,
+                AppCommand::ShowHelp => app.show_help(),
+                AppCommand::ShowManual => app.show_man(),
             }
         };
         tui.draw(&app)?;

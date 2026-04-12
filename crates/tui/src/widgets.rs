@@ -2,10 +2,13 @@ use app::app::{App, Mode};
 use ratatui::{
     symbols::border,
     text::{Line, Span},
-    widgets::{Block, Paragraph},
+    widgets::{Block, Borders, Paragraph},
 };
 
-use crate::styles::{border_style, command_line_style, title_style};
+use crate::styles::{
+    border_style, command_line_style, help_style, help_title_style, man_style, man_title_style,
+    title_style,
+};
 
 pub fn main_window(log_lines: Vec<Line>) -> Paragraph {
     let title = Line::from(Span::styled(" Metro 5 ", title_style()));
@@ -32,4 +35,51 @@ pub fn commandline<'a>(app: &'a App) -> Paragraph<'a> {
         Line::from(app.command.get_raw())
     };
     Paragraph::new(text).block(block)
+}
+
+pub fn help_block() -> Paragraph<'static> {
+    let title = Line::from("Help").style(help_title_style());
+    let block = Block::default()
+        .title(title.centered())
+        .borders(Borders::NONE)
+        .style(help_style());
+    Paragraph::new(help_text()).block(block)
+}
+
+fn help_text() -> String {
+    String::from(
+        r#"
+    - ':'   -- enter command mode
+
+    - '/'   -- search
+
+    - 'esc' -- clear all 
+
+    - ':man' -- show commands
+    "#,
+    )
+}
+
+pub fn man_block() -> Paragraph<'static> {
+    let title = Line::from("Commands").style(man_title_style());
+    let block = Block::default()
+        .title(title.centered())
+        .borders(Borders::NONE)
+        .style(man_style());
+    Paragraph::new(man_text()).block(block)
+}
+
+fn man_text() -> String {
+    String::from(
+        r#"
+    - ':help: | :h'         -- show help
+
+    - ':quit | :q'          -- quit
+
+    - ':search <pattern>'    -- search log message for <pattern>
+
+    - ':filter <log level>' -- filter for <log level> (info/log/warn/error)
+
+    "#,
+    )
 }

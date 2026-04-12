@@ -10,6 +10,8 @@ pub enum Mode {
     Normal,
     Search,
     Command,
+    Help,
+    Manual,
 }
 
 pub struct App {
@@ -62,15 +64,28 @@ impl App {
         self.query.clear();
     }
 
+    pub fn set_mode(&mut self, mode: Mode) {
+        self.mode = mode
+    }
+
     pub fn clear_state(&mut self) {
         self.reset_query();
         self.reset_filter();
+        self.set_mode(Mode::Normal);
     }
 
     pub fn apply_query(&mut self) {
         if let Some(result) = self.query.apply(&self.logs) {
             self.query_result = result;
         }
+    }
+
+    pub fn show_help(&mut self) {
+        self.set_mode(Mode::Help);
+    }
+
+    pub fn show_man(&mut self) {
+        self.set_mode(Mode::Manual);
     }
 
     pub fn handle_process_event(
@@ -139,27 +154,31 @@ impl App {
     }
 
     fn handle_esc(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
-        if self.mode == Mode::Normal {
-            return Ok(Some(AppCommand::ClearState));
-        } else {
-            self.command.clear();
-            self.query.clear();
-            self.mode = Mode::Normal;
+        match self.mode {
+            Mode::Search => {
+                self.query.clear();
+                self.set_mode(Mode::Normal);
+            }
+            Mode::Command => {
+                self.command.clear();
+                self.set_mode(Mode::Normal);
+            }
+            _ => self.clear_state(),
         }
         Ok(None)
     }
 
     fn handle_enter(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
-        let mut cmd: Option<AppCommand> = None;
-        if self.mode == Mode::Command {
-            cmd = self.command.get_cmd();
-            self.command.clear();
-        } else if self.mode == Mode::Search {
-            if let Some(query) = self.query.get() {
-                cmd = Some(AppCommand::SetQuery(query.to_string()));
-            };
-            self.query.clear();
-        }
+        let cmd: Option<AppCommand> = match self.mode {
+            Mode::Command => self.command.get_cmd(),
+            Mode::Search => self
+                .query
+                .get()
+                .map(|query| AppCommand::SetQuery(query.to_string())),
+            Mode::Help => Some(AppCommand::ShowHelp),
+            Mode::Manual => Some(AppCommand::ShowManual),
+            _ => None,
+        };
         self.mode = Mode::Normal;
         Ok(cmd)
     }

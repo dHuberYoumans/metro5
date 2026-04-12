@@ -59,6 +59,8 @@ pub enum AppCommand {
     ClearState,
     ResetQuery,
     QuitApp,
+    ShowHelp,
+    ShowManual,
 }
 
 impl FromStr for AppCommand {
@@ -83,7 +85,6 @@ impl FromStr for AppCommand {
                     Err(_) => Err(ApplicationError::Domain(DomainError::InvalidFilter)),
                 }
             }
-            // TODO needed?
             Some("search") => {
                 let query = parts.collect::<Vec<&str>>().join(" ");
                 if query.is_empty() {
@@ -92,6 +93,8 @@ impl FromStr for AppCommand {
                     Ok(AppCommand::SetQuery(query))
                 }
             }
+            Some("help") | Some("h") => Ok(AppCommand::ShowHelp),
+            Some("manual") | Some("man") => Ok(AppCommand::ShowManual),
             _ => Err(ApplicationError::UnknownCommand),
         }
     }

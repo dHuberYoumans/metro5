@@ -26,3 +26,19 @@ pub fn border_style() -> Style {
 pub fn search_result_style() -> Style {
     Style::default().bg(Color::Yellow)
 }
+
+pub fn help_style() -> Style {
+    Style::default().bg(Color::DarkGray)
+}
+
+pub fn help_title_style() -> Style {
+    Style::default().bold()
+}
+
+pub fn man_style() -> Style {
+    Style::default().bg(Color::Indexed(214)).fg(Color::Black)
+}
+
+pub fn man_title_style() -> Style {
+    Style::default().bold()
+}
