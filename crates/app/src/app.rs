@@ -291,10 +291,11 @@ mod tests {
 
     #[test]
     fn it_should_set_query() {
-        let query = "this is a query".to_string();
+        let query = "query";
+        let query_cmd = format!("search {}", query);
         assert_eq!(
-            query.parse::<AppCommand>().unwrap(),
-            AppCommand::SetQuery(query)
+            query_cmd.parse::<AppCommand>().unwrap(),
+            AppCommand::SetQuery(query.to_string())
         )
     }
 }
