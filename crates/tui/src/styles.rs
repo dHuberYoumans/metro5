@@ -36,7 +36,7 @@ pub fn help_title_style() -> Style {
 }
 
 pub fn man_style() -> Style {
-    Style::default().bg(Color::Indexed(214)).fg(Color::Black)
+    Style::default().bg(Color::DarkGray)
 }
 
 pub fn man_title_style() -> Style {
