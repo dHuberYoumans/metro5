@@ -34,11 +34,3 @@ pub fn help_style() -> Style {
 pub fn help_title_style() -> Style {
     Style::default().bold()
 }
-
-pub fn man_style() -> Style {
-    Style::default().bg(Color::DarkGray)
-}
-
-pub fn man_title_style() -> Style {
-    Style::default().bold()
-}
