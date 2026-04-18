@@ -36,11 +36,13 @@ async fn run(
                 AppCommand::SetFilter(filter) => {
                     app.set_filter(filter);
                     app.apply_filter();
+                    app.scroll_state.scroll_to_top();
                 }
                 AppCommand::ResetFilter => app.reset_filter(),
                 AppCommand::SetQuery(query) => {
                     app.set_query(query);
                     app.apply_query();
+                    app.scroll_state.scroll_to_top();
                 }
                 AppCommand::ResetQuery => app.reset_query(),
                 AppCommand::ClearState => {
@@ -49,9 +51,10 @@ async fn run(
                 AppCommand::QuitApp => break,
                 AppCommand::ShowHelp => app.show_help(),
                 AppCommand::ShowManual => app.show_man(),
+                AppCommand::Scroll(scroll_direction) => app.scroll(scroll_direction),
             }
         };
-        tui.draw(&app)?;
+        tui.draw(&mut app)?;
     }
     tui.restore()?;
     logs_stdout_handle.abort();

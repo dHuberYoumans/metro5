@@ -24,13 +24,12 @@ fn resolve_key(key: KeyEvent) -> Option<ProcessEvent> {
         return None;
     };
     let key = match key.code {
-        KeyCode::Char(c) if key.modifiers.contains(KeyModifiers::CONTROL) => {
-            if c == 'c' || c == 'd' {
-                Key::CtrlC
-            } else {
-                Key::Char(c)
-            }
-        }
+        KeyCode::Char(c) if key.modifiers.contains(KeyModifiers::CONTROL) => match c {
+            'c' => Key::CtrlC,
+            'd' => Key::CtrlD,
+            'u' => Key::CtrlU,
+            _ => Key::Char(c),
+        },
         KeyCode::Char(c) => Key::Char(c),
         KeyCode::Backspace => Key::Backspace,
         KeyCode::Enter => Key::Enter,

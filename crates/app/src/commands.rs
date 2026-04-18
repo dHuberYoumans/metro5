@@ -61,6 +61,17 @@ pub enum AppCommand {
     QuitApp,
     ShowHelp,
     ShowManual,
+    Scroll(Scroll),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Scroll {
+    Up,
+    Down,
+    Top,
+    Bottom,
+    UpByHalfPage,
+    DownByHalfPage,
 }
 
 impl FromStr for AppCommand {

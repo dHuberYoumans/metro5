@@ -1,4 +1,7 @@
-use crate::{commands::*, errors::ApplicationError, events::AppEvent, queries::Query};
+use crate::{
+    commands::*, errors::ApplicationError, events::AppEvent, queries::Query,
+    scroll_state::ScrollState,
+};
 use domain::{
     entities::*,
     parse_log,
@@ -14,6 +17,25 @@ pub enum Mode {
     Manual,
 }
 
+#[derive(Debug, Default, Clone, Copy)]
+pub struct PendingKey {
+    key: Option<char>,
+}
+
+impl PendingKey {
+    fn reset(&mut self) {
+        self.key = None;
+    }
+
+    fn set(&mut self, key: char) {
+        self.key = Some(key);
+    }
+
+    pub fn get(&self) -> Option<char> {
+        self.key
+    }
+}
+
 pub struct App {
     pub logs: Vec<LogEntry>,
     pub filter: Option<Filter>,
@@ -22,6 +44,8 @@ pub struct App {
     pub query_result: Vec<LogEntry>,
     pub mode: Mode,
     pub command: Command,
+    pub scroll_state: ScrollState,
+    pub pending_key: PendingKey,
 }
 
 impl App {
@@ -34,6 +58,19 @@ impl App {
             query_result: Vec::new(),
             mode: Mode::Normal,
             command: Command::new(),
+            scroll_state: ScrollState::default(),
+            pending_key: PendingKey::default(),
+        }
+    }
+
+    pub fn scroll(&mut self, scroll: Scroll) {
+        match scroll {
+            Scroll::Up => self.scroll_state.scroll_up(),
+            Scroll::Down => self.scroll_state.scroll_down(),
+            Scroll::Top => self.scroll_state.scroll_to_top(),
+            Scroll::Bottom => self.scroll_state.scroll_to_bottom(),
+            Scroll::UpByHalfPage => self.scroll_state.scroll_up_by_half_page(),
+            Scroll::DownByHalfPage => self.scroll_state.scroll_down_by_half_page(),
         }
     }
 
@@ -72,6 +109,7 @@ impl App {
         self.reset_query();
         self.reset_filter();
         self.set_mode(Mode::Normal);
+        self.pending_key.reset();
     }
 
     pub fn apply_query(&mut self) {
@@ -117,6 +155,8 @@ impl App {
     fn handle_key_press(&mut self, key: Key) -> Result<Option<AppCommand>, ApplicationError> {
         match key {
             Key::CtrlC => Ok(Some(AppCommand::QuitApp)),
+            Key::CtrlU => Ok(Some(AppCommand::Scroll(Scroll::UpByHalfPage))),
+            Key::CtrlD => Ok(Some(AppCommand::Scroll(Scroll::DownByHalfPage))),
             Key::Backspace => self.handle_backspace(),
             Key::Esc => self.handle_esc(),
             Key::Enter => {
@@ -131,7 +171,7 @@ impl App {
     }
 
     fn handle_backspace(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
-        //trim leading : resp leading /
+        //trim leading : resp. leading /
         if self.mode == Mode::Command {
             if self.command.raw[1..].is_empty() {
                 self.mode = Mode::Normal;
@@ -186,8 +226,19 @@ impl App {
     fn handle_char_input(&mut self, ch: char) -> Result<Option<AppCommand>, ApplicationError> {
         if !matches!(self.mode, Mode::Command | Mode::Search) {
             match ch {
-                'r' | 'j' | 'd' => {
+                'r' | 'd' => {
                     return Ok(Some(AppCommand::SendToMetro(ch.to_string())));
+                }
+                'k' => return Ok(Some(AppCommand::Scroll(Scroll::Up))),
+                'j' => return Ok(Some(AppCommand::Scroll(Scroll::Down))),
+                'G' => return Ok(Some(AppCommand::Scroll(Scroll::Bottom))),
+                'g' => {
+                    if self.pending_key.key == Some('g') {
+                        self.pending_key.reset();
+                        return Ok(Some(AppCommand::Scroll(Scroll::Top)));
+                    } else {
+                        self.pending_key.set('g');
+                    }
                 }
                 ':' => {
                     self.mode = Mode::Command;
@@ -237,6 +288,7 @@ impl Default for App {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scroll_state::Offset;
     use domain::errors::DomainError;
 
     #[test]
@@ -297,5 +349,28 @@ mod tests {
             query_cmd.parse::<AppCommand>().unwrap(),
             AppCommand::SetQuery(query.to_string())
         )
+    }
+
+    #[test]
+    fn it_should_scroll_down() {
+        let mut app = App::new();
+        app.scroll_state.scroll_down();
+        assert_eq!(app.scroll_state.get_offset().y, 1)
+    }
+
+    #[test]
+    fn it_should_scroll_up() {
+        let mut app = App::new();
+        app.scroll_state.scroll_down();
+        app.scroll_state.scroll_up();
+        assert_eq!(app.scroll_state.get_offset().y, 0)
+    }
+
+    #[test]
+    fn it_should_scroll_to_top() {
+        let mut app = App::new();
+        app.scroll_state.set_offset(Offset { x: 0, y: 42 });
+        app.scroll_state.scroll_to_top();
+        assert_eq!(app.scroll_state.get_offset().y, 0)
     }
 }

@@ -6,7 +6,7 @@ use ratatui::{Terminal, prelude::CrosstermBackend};
 use std::io::Stdout;
 
 use crate::errors::TuiError;
-use app::app::App;
+use app::{app::App, scroll_state::Size};
 
 pub mod errors;
 mod styles;
@@ -34,8 +34,16 @@ impl Tui {
         Ok(())
     }
 
-    pub fn draw(&mut self, app: &App) -> Result<(), TuiError> {
+    pub fn draw(&mut self, app: &mut App) -> Result<(), TuiError> {
         self.terminal.draw(|frame| {
+            app.scroll_state.set_page_size(Size {
+                width: frame.area().width,
+                height: frame.area().height,
+            });
+            app.scroll_state.set_size(Size {
+                width: frame.area().width,
+                height: app.logs.len() as u16,
+            });
             ui::render(frame, app);
         })?;
         Ok(())

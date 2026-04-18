@@ -1,3 +1,4 @@
+use app::{app::PendingKey, scroll_state::Offset};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
@@ -6,23 +7,35 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Widget},
 };
 
-use crate::styles::{border_style, command_line_style, help_style, help_title_style, title_style};
+use crate::styles::{
+    border_style, command_line_style, help_style, help_title_style, pending_key_style, title_style,
+};
 
-pub(crate) struct MainWindow<'a> {
+pub(crate) struct Monitor<'a> {
     pub log_lines: Vec<Line<'a>>,
+    pub scroll_offset: Offset,
+    pub pending_key: PendingKey,
 }
 
-impl Widget for MainWindow<'_> {
+impl Widget for Monitor<'_> {
     fn render(self, area: Rect, buf: &mut Buffer)
     where
         Self: Sized,
     {
         let title = Line::from(Span::styled(" Metro 5 ", title_style()));
+        let pending_key = if let Some(key) = self.pending_key.get() {
+            Line::from(Span::styled(format!(" {} ", key), pending_key_style()))
+        } else {
+            Line::default()
+        };
         let block = Block::bordered()
             .title(title.right_aligned())
+            .title_bottom(pending_key.right_aligned())
             .border_set(border::ROUNDED)
             .border_style(border_style());
-        let body = Paragraph::new(self.log_lines).block(block);
+        let body = Paragraph::new(self.log_lines)
+            .block(block)
+            .scroll((self.scroll_offset.y, self.scroll_offset.x));
         body.render(area, buf)
     }
 }

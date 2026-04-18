@@ -13,7 +13,11 @@ use crate::widgets::*;
 
 pub fn render(frame: &mut Frame, app: &App) {
     let logs = get_logs(app);
-    let main_window = MainWindow { log_lines: logs };
+    let monitor = Monitor {
+        log_lines: logs,
+        scroll_offset: app.scroll_state.get_offset(),
+        pending_key: app.pending_key,
+    };
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(1), Constraint::Length(3)])
@@ -25,7 +29,7 @@ pub fn render(frame: &mut Frame, app: &App) {
                 text: app.command.get_raw().to_string(),
             };
             Clear.render(frame.area(), frame.buffer_mut());
-            main_window.render(chunks[0], frame.buffer_mut());
+            monitor.render(chunks[0], frame.buffer_mut());
             commandline.render(chunks[1], frame.buffer_mut());
             frame.set_cursor_position(Position {
                 x: chunks[1].x + app.command.get_raw_len() as u16 + 1,
@@ -38,7 +42,7 @@ pub fn render(frame: &mut Frame, app: &App) {
                 text: app.query.get_raw().to_string(),
             };
             Clear.render(frame.area(), frame.buffer_mut());
-            main_window.render(chunks[0], frame.buffer_mut());
+            monitor.render(chunks[0], frame.buffer_mut());
             commandline.render(chunks[1], frame.buffer_mut());
             frame.set_cursor_position(Position {
                 x: chunks[1].x + app.query.get_raw_len() as u16 + 1,
@@ -61,7 +65,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         }
         _ => {
             Clear.render(frame.area(), frame.buffer_mut());
-            main_window.render(frame.area(), frame.buffer_mut());
+            monitor.render(frame.area(), frame.buffer_mut());
         }
     }
 }
