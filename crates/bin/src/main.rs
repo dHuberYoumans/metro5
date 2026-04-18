@@ -34,23 +34,23 @@ async fn run(
             match cmd {
                 AppCommand::SendToMetro(cmd) => controller.send_command(&cmd).await?,
                 AppCommand::SetFilter(filter) => {
-                    app.set_filter(filter);
-                    app.apply_filter();
+                    app.state.set_filter(filter);
+                    app.state.apply_filter();
                     app.scroll_state.scroll_to_top();
                 }
-                AppCommand::ResetFilter => app.reset_filter(),
+                AppCommand::ResetFilter => app.state.reset_filter(),
                 AppCommand::SetQuery(query) => {
-                    app.set_query(query);
-                    app.apply_query();
+                    app.state.set_query(query);
+                    app.state.apply_query();
                     app.scroll_state.scroll_to_top();
                 }
-                AppCommand::ResetQuery => app.reset_query(),
+                AppCommand::ResetQuery => app.state.reset_query(),
                 AppCommand::ClearState => {
-                    app.clear_state();
+                    app.state.clear_state();
                 }
                 AppCommand::QuitApp => break,
-                AppCommand::ShowHelp => app.show_help(),
-                AppCommand::ShowManual => app.show_man(),
+                AppCommand::ShowHelp => app.state.show_help(),
+                AppCommand::ShowManual => app.state.show_man(),
                 AppCommand::Scroll(scroll_direction) => app.scroll(scroll_direction),
             }
         };

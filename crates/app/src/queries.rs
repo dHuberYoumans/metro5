@@ -2,6 +2,7 @@ use domain::entities::LogEntry;
 
 use crate::errors::ApplicationError;
 
+#[derive(Debug, Default)]
 pub struct Query {
     pub raw: String,
     pub query: Option<String>,
@@ -68,11 +69,5 @@ impl Query {
             .ok_or(ApplicationError::InvalidCommandPrefix)?;
         self.query = Some(stripped.to_string());
         Ok(())
-    }
-}
-
-impl Default for Query {
-    fn default() -> Self {
-        Self::new()
     }
 }

@@ -1,5 +1,5 @@
 use crate::styles::{level_style, search_result_style};
-use app::app::{App, Mode};
+use app::{app::App, app_state::Mode};
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout},
@@ -16,36 +16,36 @@ pub fn render(frame: &mut Frame, app: &App) {
     let monitor = Monitor {
         log_lines: logs,
         scroll_offset: app.scroll_state.get_offset(),
-        pending_key: app.pending_key,
+        pending_key: app.state.pending_key,
     };
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(1), Constraint::Length(3)])
         .split(frame.area());
-    match app.mode {
+    match app.state.mode {
         Mode::Command => {
             let commandline = Commandline {
                 title: " cmd ".to_string(),
-                text: app.command.get_raw().to_string(),
+                text: app.state.command.get_raw().to_string(),
             };
             Clear.render(frame.area(), frame.buffer_mut());
             monitor.render(chunks[0], frame.buffer_mut());
             commandline.render(chunks[1], frame.buffer_mut());
             frame.set_cursor_position(Position {
-                x: chunks[1].x + app.command.get_raw_len() as u16 + 1,
+                x: chunks[1].x + app.state.command.get_raw_len() as u16 + 1,
                 y: chunks[1].y + 1,
             });
         }
         Mode::Search => {
             let commandline = Commandline {
                 title: " search ".to_string(),
-                text: app.query.get_raw().to_string(),
+                text: app.state.query.get_raw().to_string(),
             };
             Clear.render(frame.area(), frame.buffer_mut());
             monitor.render(chunks[0], frame.buffer_mut());
             commandline.render(chunks[1], frame.buffer_mut());
             frame.set_cursor_position(Position {
-                x: chunks[1].x + app.query.get_raw_len() as u16 + 1,
+                x: chunks[1].x + app.state.query.get_raw_len() as u16 + 1,
                 y: chunks[1].y + 1,
             });
         }
@@ -71,19 +71,19 @@ pub fn render(frame: &mut Frame, app: &App) {
 }
 
 fn get_logs(app: &App) -> Vec<Line<'_>> {
-    let logs = if let Some(_filter) = app.filter {
-        &app.filtered
-    } else if app.query.is_some() {
-        &app.query_result
+    let logs = if let Some(_filter) = app.state.filter {
+        &app.state.filtered
+    } else if app.state.query.is_some() {
+        &app.state.query_result
     } else {
-        &app.logs
+        &app.state.logs
     };
-    let query = app.query.get();
+    let query = app.state.query.get();
     let parsed: Vec<Line> = logs
         .iter()
         .map(|log| {
             let level_span = Span::styled(format!("{}", log.level), level_style(&log.level));
-            let msg_span = if app.mode == Mode::Search && query.is_some() {
+            let msg_span = if app.state.mode == Mode::Search && query.is_some() {
                 if let Some(query) = query {
                     highlighted_search(&log.message, query)
                 } else {

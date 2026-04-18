@@ -3,6 +3,7 @@ use std::str::FromStr;
 use crate::errors::ApplicationError;
 use domain::{DomainError, entities::*};
 
+#[derive(Debug, Default)]
 pub struct Command {
     pub raw: String,
     pub cmd: Option<AppCommand>,
@@ -41,12 +42,6 @@ impl Command {
             .ok_or(ApplicationError::InvalidCommandPrefix)?;
         self.cmd = Some(AppCommand::from_str(stripped)?);
         Ok(())
-    }
-}
-
-impl Default for Command {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

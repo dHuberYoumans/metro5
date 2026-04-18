@@ -1,4 +1,4 @@
-use app::{app::PendingKey, scroll_state::Offset};
+use app::{app_state::PendingKey, scroll_state::Offset};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},

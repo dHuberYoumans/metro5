@@ -42,7 +42,7 @@ impl Tui {
             });
             app.scroll_state.set_size(Size {
                 width: frame.area().width,
-                height: app.logs.len() as u16,
+                height: app.state.logs.len() as u16,
             });
             ui::render(frame, app);
         })?;

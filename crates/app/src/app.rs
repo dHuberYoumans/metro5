@@ -1,65 +1,25 @@
 use crate::{
-    commands::*, errors::ApplicationError, events::AppEvent, queries::Query,
+    app_state::{AppState, Mode},
+    commands::*,
+    errors::ApplicationError,
+    events::AppEvent,
     scroll_state::ScrollState,
 };
 use domain::{
-    entities::*,
     parse_log,
     process::{Key, ProcessEvent, StreamKind},
 };
 
-#[derive(Debug, PartialEq)]
-pub enum Mode {
-    Normal,
-    Search,
-    Command,
-    Help,
-    Manual,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct PendingKey {
-    key: Option<char>,
-}
-
-impl PendingKey {
-    fn reset(&mut self) {
-        self.key = None;
-    }
-
-    fn set(&mut self, key: char) {
-        self.key = Some(key);
-    }
-
-    pub fn get(&self) -> Option<char> {
-        self.key
-    }
-}
-
 pub struct App {
-    pub logs: Vec<LogEntry>,
-    pub filter: Option<Filter>,
-    pub filtered: Vec<LogEntry>,
-    pub query: Query,
-    pub query_result: Vec<LogEntry>,
-    pub mode: Mode,
-    pub command: Command,
     pub scroll_state: ScrollState,
-    pub pending_key: PendingKey,
+    pub state: AppState,
 }
 
 impl App {
     pub fn new() -> Self {
         App {
-            logs: Vec::new(),
-            filter: None,
-            filtered: Vec::new(),
-            query: Query::new(),
-            query_result: Vec::new(),
-            mode: Mode::Normal,
-            command: Command::new(),
+            state: AppState::default(),
             scroll_state: ScrollState::default(),
-            pending_key: PendingKey::default(),
         }
     }
 
@@ -72,58 +32,6 @@ impl App {
             Scroll::UpByHalfPage => self.scroll_state.scroll_up_by_half_page(),
             Scroll::DownByHalfPage => self.scroll_state.scroll_down_by_half_page(),
         }
-    }
-
-    pub fn set_filter(&mut self, filter: Filter) {
-        self.filter = Some(filter)
-    }
-
-    pub fn reset_filter(&mut self) {
-        self.filter = None
-    }
-
-    pub fn apply_filter(&mut self) {
-        if let Some(filter) = self.filter {
-            self.filtered = self
-                .logs
-                .iter()
-                .filter(|log| filter.matches(log))
-                .cloned()
-                .collect();
-        };
-    }
-
-    pub fn set_query(&mut self, query: String) {
-        self.query.set(query)
-    }
-
-    pub fn reset_query(&mut self) {
-        self.query.clear();
-    }
-
-    pub fn set_mode(&mut self, mode: Mode) {
-        self.mode = mode
-    }
-
-    pub fn clear_state(&mut self) {
-        self.reset_query();
-        self.reset_filter();
-        self.set_mode(Mode::Normal);
-        self.pending_key.reset();
-    }
-
-    pub fn apply_query(&mut self) {
-        if let Some(result) = self.query.apply(&self.logs) {
-            self.query_result = result;
-        }
-    }
-
-    pub fn show_help(&mut self) {
-        self.set_mode(Mode::Help);
-    }
-
-    pub fn show_man(&mut self) {
-        self.set_mode(Mode::Manual);
     }
 
     pub fn handle_process_event(
@@ -160,7 +68,7 @@ impl App {
             Key::Backspace => self.handle_backspace(),
             Key::Esc => self.handle_esc(),
             Key::Enter => {
-                if matches!(self.mode, Mode::Command | Mode::Search) {
+                if matches!(self.state.mode, Mode::Command | Mode::Search) {
                     self.handle_enter()
                 } else {
                     Ok(None)
@@ -172,21 +80,21 @@ impl App {
 
     fn handle_backspace(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
         //trim leading : resp. leading /
-        if self.mode == Mode::Command {
-            if self.command.raw[1..].is_empty() {
-                self.mode = Mode::Normal;
+        if self.state.mode == Mode::Command {
+            if self.state.command.raw[1..].is_empty() {
+                self.state.mode = Mode::Normal;
             } else {
-                self.command.raw.pop();
+                self.state.command.raw.pop();
             }
         };
-        if self.mode == Mode::Search {
-            if self.query.raw[1..].is_empty() {
-                self.mode = Mode::Normal;
+        if self.state.mode == Mode::Search {
+            if self.state.query.raw[1..].is_empty() {
+                self.state.mode = Mode::Normal;
             } else {
-                self.query.raw.pop();
-                self.apply_query();
+                self.state.query.raw.pop();
+                self.state.apply_query();
                 return Ok(Some(AppCommand::SetQuery(
-                    self.query.get().unwrap().to_string(),
+                    self.state.query.get().unwrap().to_string(),
                 )));
             }
         }
@@ -194,24 +102,25 @@ impl App {
     }
 
     fn handle_esc(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
-        match self.mode {
+        match self.state.mode {
             Mode::Search => {
-                self.query.clear();
-                self.set_mode(Mode::Normal);
+                self.state.query.clear();
+                self.state.set_mode(Mode::Normal);
             }
             Mode::Command => {
-                self.command.clear();
-                self.set_mode(Mode::Normal);
+                self.state.command.clear();
+                self.state.set_mode(Mode::Normal);
             }
-            _ => self.clear_state(),
+            _ => self.state.clear_state(),
         }
         Ok(None)
     }
 
     fn handle_enter(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
-        let cmd: Option<AppCommand> = match self.mode {
-            Mode::Command => self.command.get_cmd(),
+        let cmd: Option<AppCommand> = match self.state.mode {
+            Mode::Command => self.state.command.get_cmd(),
             Mode::Search => self
+                .state
                 .query
                 .get()
                 .map(|query| AppCommand::SetQuery(query.to_string())),
@@ -219,12 +128,12 @@ impl App {
             Mode::Manual => Some(AppCommand::ShowManual),
             _ => None,
         };
-        self.mode = Mode::Normal;
+        self.state.mode = Mode::Normal;
         Ok(cmd)
     }
 
     fn handle_char_input(&mut self, ch: char) -> Result<Option<AppCommand>, ApplicationError> {
-        if !matches!(self.mode, Mode::Command | Mode::Search) {
+        if !matches!(self.state.mode, Mode::Command | Mode::Search) {
             match ch {
                 'r' | 'd' => {
                     return Ok(Some(AppCommand::SendToMetro(ch.to_string())));
@@ -233,34 +142,34 @@ impl App {
                 'j' => return Ok(Some(AppCommand::Scroll(Scroll::Down))),
                 'G' => return Ok(Some(AppCommand::Scroll(Scroll::Bottom))),
                 'g' => {
-                    if self.pending_key.key == Some('g') {
-                        self.pending_key.reset();
+                    if self.state.pending_key.key == Some('g') {
+                        self.state.pending_key.reset();
                         return Ok(Some(AppCommand::Scroll(Scroll::Top)));
                     } else {
-                        self.pending_key.set('g');
+                        self.state.pending_key.set('g');
                     }
                 }
                 ':' => {
-                    self.mode = Mode::Command;
-                    self.command.raw = ":".to_string();
+                    self.state.mode = Mode::Command;
+                    self.state.command.raw = ":".to_string();
                     return Ok(None);
                 }
                 '/' => {
-                    self.mode = Mode::Search;
-                    self.query.raw = "/".to_string();
+                    self.state.mode = Mode::Search;
+                    self.state.query.raw = "/".to_string();
                     return Ok(None);
                 }
                 _ => return Ok(None),
             }
         }
-        if self.mode == Mode::Command {
-            self.command.raw.push(ch);
+        if self.state.mode == Mode::Command {
+            self.state.command.raw.push(ch);
         }
-        if self.mode == Mode::Search {
-            self.query.raw.push(ch);
-            self.apply_query();
+        if self.state.mode == Mode::Search {
+            self.state.query.raw.push(ch);
+            self.state.apply_query();
             return Ok(Some(AppCommand::SetQuery(
-                self.query.get().unwrap().to_string(),
+                self.state.query.get().unwrap().to_string(),
             )));
         }
         Ok(None)
@@ -268,14 +177,14 @@ impl App {
 
     fn handle_log_event(&mut self, log: &str) {
         let parsed = parse_log(log);
-        if let Some(filter) = &self.filter {
+        if let Some(filter) = &self.state.filter {
             if filter.matches(&parsed) {
-                self.filtered.push(parsed.clone());
+                self.state.filtered.push(parsed.clone());
             }
         } else {
-            self.filtered.push(parsed.clone());
+            self.state.filtered.push(parsed.clone());
         }
-        self.logs.push(parsed);
+        self.state.logs.push(parsed);
     }
 }
 
@@ -289,7 +198,7 @@ impl Default for App {
 mod tests {
     use super::*;
     use crate::scroll_state::Offset;
-    use domain::errors::DomainError;
+    use domain::{entities::*, errors::DomainError};
 
     #[test]
     fn it_should_request_quit() {
