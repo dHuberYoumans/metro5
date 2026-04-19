@@ -1,3 +1,4 @@
+use app::commands::HelpCommand;
 use app::{app::*, commands::AppCommand, ports::MetroController};
 use infra::*;
 use metro5::errors::MainError;
@@ -50,8 +51,13 @@ async fn run(
                 }
                 AppCommand::QuitApp => break,
                 AppCommand::ShowHelp => app.state.show_help(),
-                AppCommand::ShowManual => app.state.show_man(),
                 AppCommand::Scroll(scroll_direction) => app.scroll(scroll_direction),
+                AppCommand::HelpMenu(HelpCommand::SelectNext) => app.help_state.select_next(),
+                AppCommand::HelpMenu(HelpCommand::SelectPrev) => app.help_state.select_previous(),
+                AppCommand::HelpMenu(HelpCommand::ExpandSection) => app.help_state.expand_section(),
+                AppCommand::HelpMenu(HelpCommand::CollapseSection) => {
+                    app.help_state.collase_section()
+                }
             }
         };
         tui.draw(&mut app)?;

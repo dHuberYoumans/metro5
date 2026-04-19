@@ -1,5 +1,5 @@
 use domain::entities::LogLevel;
-use ratatui::style::{Color, Style};
+use ratatui::style::{Color, Modifier, Style};
 
 pub(crate) fn level_style(level: &LogLevel) -> Style {
     match level {
@@ -23,18 +23,16 @@ pub(crate) fn border_style() -> Style {
     Style::default().fg(Color::Blue).bold() // 8-bit blue
 }
 
-pub(crate) fn search_result_style() -> Style {
-    Style::default().bg(Color::Yellow)
-}
-
-pub(crate) fn help_style() -> Style {
-    Style::default().bg(Color::DarkGray)
-}
-
-pub(crate) fn help_title_style() -> Style {
-    Style::default().bold()
-}
+pub const SEARCH_RESULT_STYLE: Style = Style::new().bg(Color::Yellow);
 
 pub(crate) fn pending_key_style() -> Style {
     Style::default().fg(Color::Blue)
 }
+
+pub const HELP_BLOCK_STYLE: Style = Style::new().bg(Color::DarkGray);
+
+pub const HELP_TITLE_STYLE: Style = Style::new().bold();
+
+pub const HELP_SELECTED_STYLE: Style = Style::new().fg(Color::White);
+
+pub const HELP_HIGHLIGHT_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);

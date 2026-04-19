@@ -3,6 +3,7 @@ pub mod app_state;
 pub mod commands;
 pub mod errors;
 pub mod events;
+pub mod help_state;
 pub mod ports;
 pub mod queries;
 pub mod scroll_state;

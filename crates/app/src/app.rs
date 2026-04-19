@@ -3,6 +3,7 @@ use crate::{
     commands::*,
     errors::ApplicationError,
     events::AppEvent,
+    help_state::HelpState,
     scroll_state::ScrollState,
 };
 use domain::{
@@ -13,6 +14,7 @@ use domain::{
 pub struct App {
     pub scroll_state: ScrollState,
     pub state: AppState,
+    pub help_state: HelpState,
 }
 
 impl App {
@@ -20,6 +22,7 @@ impl App {
         App {
             state: AppState::default(),
             scroll_state: ScrollState::default(),
+            help_state: HelpState::default(),
         }
     }
 
@@ -67,13 +70,10 @@ impl App {
             Key::CtrlD => Ok(Some(AppCommand::Scroll(Scroll::DownByHalfPage))),
             Key::Backspace => self.handle_backspace(),
             Key::Esc => self.handle_esc(),
-            Key::Enter => {
-                if matches!(self.state.mode, Mode::Command | Mode::Search) {
-                    self.handle_enter()
-                } else {
-                    Ok(None)
-                }
-            }
+            Key::Enter => match self.state.mode {
+                Mode::Normal => Ok(None),
+                _ => self.handle_enter(),
+            },
             Key::Char(ch) => self.handle_char_input(ch),
         }
     }
@@ -124,44 +124,24 @@ impl App {
                 .query
                 .get()
                 .map(|query| AppCommand::SetQuery(query.to_string())),
-            Mode::Help => Some(AppCommand::ShowHelp),
-            Mode::Manual => Some(AppCommand::ShowManual),
+            Mode::Help => {
+                if self.help_state.get_expanded().is_some() {
+                    self.help_state.collase_section();
+                    Some(AppCommand::HelpMenu(HelpCommand::CollapseSection))
+                } else {
+                    self.help_state.expand_section();
+                    Some(AppCommand::HelpMenu(HelpCommand::ExpandSection))
+                }
+            }
             _ => None,
         };
-        self.state.mode = Mode::Normal;
+        if self.state.mode != Mode::Help {
+            self.state.mode = Mode::Normal;
+        };
         Ok(cmd)
     }
 
     fn handle_char_input(&mut self, ch: char) -> Result<Option<AppCommand>, ApplicationError> {
-        if !matches!(self.state.mode, Mode::Command | Mode::Search) {
-            match ch {
-                'r' | 'd' => {
-                    return Ok(Some(AppCommand::SendToMetro(ch.to_string())));
-                }
-                'k' => return Ok(Some(AppCommand::Scroll(Scroll::Up))),
-                'j' => return Ok(Some(AppCommand::Scroll(Scroll::Down))),
-                'G' => return Ok(Some(AppCommand::Scroll(Scroll::Bottom))),
-                'g' => {
-                    if self.state.pending_key.key == Some('g') {
-                        self.state.pending_key.reset();
-                        return Ok(Some(AppCommand::Scroll(Scroll::Top)));
-                    } else {
-                        self.state.pending_key.set('g');
-                    }
-                }
-                ':' => {
-                    self.state.mode = Mode::Command;
-                    self.state.command.raw = ":".to_string();
-                    return Ok(None);
-                }
-                '/' => {
-                    self.state.mode = Mode::Search;
-                    self.state.query.raw = "/".to_string();
-                    return Ok(None);
-                }
-                _ => return Ok(None),
-            }
-        }
         if self.state.mode == Mode::Command {
             self.state.command.raw.push(ch);
         }
@@ -171,6 +151,40 @@ impl App {
             return Ok(Some(AppCommand::SetQuery(
                 self.state.query.get().unwrap().to_string(),
             )));
+        }
+        if self.state.mode == Mode::Help {
+            match ch {
+                'j' => return Ok(Some(AppCommand::HelpMenu(HelpCommand::SelectNext))),
+                'k' => return Ok(Some(AppCommand::HelpMenu(HelpCommand::SelectPrev))),
+                _ => return Ok(None),
+            }
+        }
+        match ch {
+            'r' | 'd' => {
+                return Ok(Some(AppCommand::SendToMetro(ch.to_string())));
+            }
+            'k' => return Ok(Some(AppCommand::Scroll(Scroll::Up))),
+            'j' => return Ok(Some(AppCommand::Scroll(Scroll::Down))),
+            'G' => return Ok(Some(AppCommand::Scroll(Scroll::Bottom))),
+            'g' => {
+                if self.state.pending_key.key == Some('g') {
+                    self.state.pending_key.reset();
+                    return Ok(Some(AppCommand::Scroll(Scroll::Top)));
+                } else {
+                    self.state.pending_key.set('g');
+                }
+            }
+            ':' => {
+                self.state.mode = Mode::Command;
+                self.state.command.raw = ":".to_string();
+                return Ok(None);
+            }
+            '/' => {
+                self.state.mode = Mode::Search;
+                self.state.query.raw = "/".to_string();
+                return Ok(None);
+            }
+            _ => return Ok(None),
         }
         Ok(None)
     }

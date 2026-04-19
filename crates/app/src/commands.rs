@@ -55,8 +55,16 @@ pub enum AppCommand {
     ResetQuery,
     QuitApp,
     ShowHelp,
-    ShowManual,
     Scroll(Scroll),
+    HelpMenu(HelpCommand),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum HelpCommand {
+    SelectNext,
+    SelectPrev,
+    ExpandSection,
+    CollapseSection,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -100,7 +108,6 @@ impl FromStr for AppCommand {
                 }
             }
             Some("help") | Some("h") => Ok(AppCommand::ShowHelp),
-            Some("manual") | Some("man") => Ok(AppCommand::ShowManual),
             _ => Err(ApplicationError::UnknownCommand),
         }
     }

@@ -61,10 +61,6 @@ impl AppState {
     pub fn show_help(&mut self) {
         self.set_mode(Mode::Help);
     }
-
-    pub fn show_man(&mut self) {
-        self.set_mode(Mode::Manual);
-    }
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -93,5 +89,4 @@ pub enum Mode {
     Search,
     Command,
     Help,
-    Manual,
 }
