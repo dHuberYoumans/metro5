@@ -14,3 +14,4 @@ infra = { workspace = true }
 tui = { workspace = true }
 tokio = { version = "1.49.0", features = ["full"] }
 thiserror.workspace = true
+strip-ansi-escapes = "0.2"

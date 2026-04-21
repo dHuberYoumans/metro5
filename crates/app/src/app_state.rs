@@ -11,6 +11,7 @@ pub struct AppState {
     pub mode: Mode,
     pub command: Command,
     pub pending_key: PendingKey,
+    pub path: Option<String>,
 }
 
 impl AppState {
@@ -60,6 +61,10 @@ impl AppState {
 
     pub fn show_help(&mut self) {
         self.set_mode(Mode::Help);
+    }
+
+    pub fn set_path(&mut self, path: String) {
+        self.path = Some(path);
     }
 }
 

@@ -52,13 +52,15 @@ const GETTING_STARTED: &str = r#"
     "#;
 
 const COMMANDS: &str = r#"
-    - ':help: | :h'         -- show help
+    - ':help: | :h'              -- show help
 
-    - ':quit | :q'          -- quit
+    - ':quit | :q'               -- quit
 
-    - ':search <pattern>'    -- search log message for <pattern>
+    - ':write | :w <path>'       -- save to file
 
-    - ':filter <log level>' -- filter for <log level> (info/log/warn/error)
+    - ':search | :s <pattern>'   -- search log message for <pattern>
+
+    - ':filter | :f <log level>' -- filter for <log level> (info/log/warn/error)
 
     "#;
 

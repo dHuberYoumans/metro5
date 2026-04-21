@@ -14,6 +14,9 @@ pub enum ApplicationError {
 
     #[error(transparent)]
     Domain(#[from] DomainError),
+
+    #[error("too many arguments")]
+    TooManyArguments,
 }
 
 pub type Result<T> = std::result::Result<T, ApplicationError>;

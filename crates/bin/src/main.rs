@@ -2,6 +2,8 @@ use app::commands::HelpCommand;
 use app::{app::*, commands::AppCommand, ports::MetroController};
 use infra::*;
 use metro5::errors::MainError;
+use std::path::PathBuf;
+use strip_ansi_escapes::strip;
 use tokio::process::{ChildStderr, ChildStdout};
 use tokio::sync::mpsc;
 use tui::Tui;
@@ -57,6 +59,32 @@ async fn run(
                 AppCommand::HelpMenu(HelpCommand::ExpandSection) => app.help_state.expand_section(),
                 AppCommand::HelpMenu(HelpCommand::CollapseSection) => {
                     app.help_state.collase_section()
+                }
+                AppCommand::WriteToFile(path) => {
+                    app.state.set_path(path.clone());
+                    let content: Vec<String> = app
+                        .state
+                        .logs
+                        .iter()
+                        .map(|log| {
+                            let stripped = strip(log.to_string());
+                            String::from_utf8_lossy(&stripped).to_string()
+                        })
+                        .collect();
+                    infra::fs::write_to_file(PathBuf::from(path), content.join("\n"));
+                }
+                AppCommand::WriteAndQuit => {
+                    if let Some(ref path) = app.state.path {
+                        let content: Vec<String> = app
+                            .state
+                            .logs
+                            .iter()
+                            .map(|log| format!("{}", log))
+                            .collect();
+                        infra::fs::write_to_file(PathBuf::from(path), content.join("\n"));
+                    } else {
+                        todo!("implement allert: no path found");
+                    }
                 }
             }
         };

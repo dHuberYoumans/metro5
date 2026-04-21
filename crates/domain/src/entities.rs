@@ -17,6 +17,12 @@ impl Default for LogEntry {
     }
 }
 
+impl fmt::Display for LogEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", self.level, self.message)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Filter {
     Level(LogLevel),

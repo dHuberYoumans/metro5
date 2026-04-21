@@ -142,51 +142,50 @@ impl App {
     }
 
     fn handle_char_input(&mut self, ch: char) -> Result<Option<AppCommand>, ApplicationError> {
-        if self.state.mode == Mode::Command {
-            self.state.command.raw.push(ch);
-        }
-        if self.state.mode == Mode::Search {
-            self.state.query.raw.push(ch);
-            self.state.apply_query();
-            return Ok(Some(AppCommand::SetQuery(
-                self.state.query.get().unwrap().to_string(),
-            )));
-        }
-        if self.state.mode == Mode::Help {
-            match ch {
-                'j' => return Ok(Some(AppCommand::HelpMenu(HelpCommand::SelectNext))),
-                'k' => return Ok(Some(AppCommand::HelpMenu(HelpCommand::SelectPrev))),
-                _ => return Ok(None),
+        match self.state.mode {
+            Mode::Command => {
+                self.state.command.raw.push(ch);
+                Ok(None)
             }
-        }
-        match ch {
-            'r' | 'd' => {
-                return Ok(Some(AppCommand::SendToMetro(ch.to_string())));
+            Mode::Search => {
+                self.state.query.raw.push(ch);
+                self.state.apply_query();
+                Ok(Some(AppCommand::SetQuery(
+                    self.state.query.get().unwrap().to_string(),
+                )))
             }
-            'k' => return Ok(Some(AppCommand::Scroll(Scroll::Up))),
-            'j' => return Ok(Some(AppCommand::Scroll(Scroll::Down))),
-            'G' => return Ok(Some(AppCommand::Scroll(Scroll::Bottom))),
-            'g' => {
-                if self.state.pending_key.key == Some('g') {
-                    self.state.pending_key.reset();
-                    return Ok(Some(AppCommand::Scroll(Scroll::Top)));
-                } else {
-                    self.state.pending_key.set('g');
+            Mode::Help => match ch {
+                'j' => Ok(Some(AppCommand::HelpMenu(HelpCommand::SelectNext))),
+                'k' => Ok(Some(AppCommand::HelpMenu(HelpCommand::SelectPrev))),
+                _ => Ok(None),
+            },
+            Mode::Normal => match ch {
+                'r' | 'd' => Ok(Some(AppCommand::SendToMetro(ch.to_string()))),
+                'k' => Ok(Some(AppCommand::Scroll(Scroll::Up))),
+                'j' => Ok(Some(AppCommand::Scroll(Scroll::Down))),
+                'G' => Ok(Some(AppCommand::Scroll(Scroll::Bottom))),
+                'g' => {
+                    if self.state.pending_key.key == Some('g') {
+                        self.state.pending_key.reset();
+                        Ok(Some(AppCommand::Scroll(Scroll::Top)))
+                    } else {
+                        self.state.pending_key.set('g');
+                        Ok(None)
+                    }
                 }
-            }
-            ':' => {
-                self.state.mode = Mode::Command;
-                self.state.command.raw = ":".to_string();
-                return Ok(None);
-            }
-            '/' => {
-                self.state.mode = Mode::Search;
-                self.state.query.raw = "/".to_string();
-                return Ok(None);
-            }
-            _ => return Ok(None),
+                ':' => {
+                    self.state.mode = Mode::Command;
+                    self.state.command.raw = ":".to_string();
+                    Ok(None)
+                }
+                '/' => {
+                    self.state.mode = Mode::Search;
+                    self.state.query.raw = "/".to_string();
+                    Ok(None)
+                }
+                _ => Ok(None),
+            },
         }
-        Ok(None)
     }
 
     fn handle_log_event(&mut self, log: &str) {
