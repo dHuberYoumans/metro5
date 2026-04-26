@@ -3,9 +3,17 @@ pub struct ScrollState {
     offset: Offset,
     size: Option<Size>,
     page_size: Option<Size>,
+    auto_scroll: bool,
 }
 
 impl ScrollState {
+    pub fn with_auto_scroll() -> Self {
+        Self {
+            auto_scroll: true,
+            ..Self::default()
+        }
+    }
+
     pub fn set_offset(&mut self, offset: Offset) {
         self.offset = offset;
     }
@@ -24,6 +32,10 @@ impl ScrollState {
 
     pub fn get_size(&self) -> Option<Size> {
         self.size
+    }
+
+    pub fn get_auto_scroll(&self) -> bool {
+        self.auto_scroll
     }
 
     pub fn get_page_size(&self) -> Option<Size> {
@@ -60,6 +72,25 @@ impl ScrollState {
             .size
             .map_or(u16::MAX, |size| size.height.saturating_sub(page_height - 1));
         self.offset.y = bottom;
+    }
+
+    pub fn get_bottom(&self) -> Offset {
+        let page_height = self.page_size.map_or(0, |page_size| page_size.height);
+        let bottom = self
+            .size
+            .map_or(u16::MAX, |size| size.height.saturating_sub(page_height - 1));
+        Offset {
+            x: self.offset.x,
+            y: bottom,
+        }
+    }
+
+    pub fn enable_auto_scroll(&mut self) {
+        self.auto_scroll = true;
+    }
+
+    pub fn disable_auto_scroll(&mut self) {
+        self.auto_scroll = false;
     }
 }
 

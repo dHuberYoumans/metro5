@@ -21,19 +21,44 @@ impl App {
     pub fn new() -> Self {
         App {
             state: AppState::default(),
-            scroll_state: ScrollState::default(),
+            scroll_state: ScrollState::with_auto_scroll(),
             help_state: HelpState::default(),
         }
     }
 
     pub fn scroll(&mut self, scroll: Scroll) {
         match scroll {
-            Scroll::Up => self.scroll_state.scroll_up(),
-            Scroll::Down => self.scroll_state.scroll_down(),
-            Scroll::Top => self.scroll_state.scroll_to_top(),
-            Scroll::Bottom => self.scroll_state.scroll_to_bottom(),
-            Scroll::UpByHalfPage => self.scroll_state.scroll_up_by_half_page(),
-            Scroll::DownByHalfPage => self.scroll_state.scroll_down_by_half_page(),
+            Scroll::Up => {
+                self.scroll_state.disable_auto_scroll();
+                self.scroll_state.scroll_up()
+            }
+            Scroll::Down => {
+                self.scroll_state.disable_auto_scroll();
+                self.scroll_state.scroll_down()
+            }
+            Scroll::Top => {
+                self.scroll_state.disable_auto_scroll();
+                self.scroll_state.scroll_to_top()
+            }
+            Scroll::Bottom => {
+                self.scroll_state.enable_auto_scroll();
+                self.scroll_state.scroll_to_bottom()
+            }
+            Scroll::UpByHalfPage => {
+                self.scroll_state.disable_auto_scroll();
+                self.scroll_state.scroll_up_by_half_page()
+            }
+            Scroll::DownByHalfPage => {
+                self.scroll_state.disable_auto_scroll();
+                self.scroll_state.scroll_down_by_half_page()
+            }
+            Scroll::Next => {
+                if let Some(size) = self.scroll_state.get_page_size()
+                    && self.state.logs.len() as u16 > size.height
+                {
+                    self.scroll_state.scroll_down()
+                }
+            }
         }
     }
 
@@ -58,7 +83,11 @@ impl App {
         match event {
             AppEvent::LogReceived(log) => {
                 self.handle_log_event(&log);
-                Ok(None)
+                if self.scroll_state.get_auto_scroll() {
+                    Ok(Some(AppCommand::Scroll(Scroll::Next)))
+                } else {
+                    Ok(None)
+                }
             }
         }
     }

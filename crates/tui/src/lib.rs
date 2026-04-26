@@ -59,11 +59,13 @@ impl Tui {
             });
             app.help_state
                 .set_number_of_sections(help.number_of_sections());
-            let logs = get_logs(app);
+            let scroll_offset = app.scroll_state.get_offset();
+            let log_lines = get_logs(app);
+            let pending_key = app.state.pending_key;
             let monitor = Monitor {
-                log_lines: logs,
-                scroll_offset: app.scroll_state.get_offset(),
-                pending_key: app.state.pending_key,
+                log_lines,
+                scroll_offset,
+                pending_key,
             };
             ui::render(frame, app, help.clone(), monitor);
         })?;

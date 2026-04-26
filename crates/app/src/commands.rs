@@ -77,6 +77,7 @@ pub enum Scroll {
     Bottom,
     UpByHalfPage,
     DownByHalfPage,
+    Next,
 }
 
 impl FromStr for AppCommand {
