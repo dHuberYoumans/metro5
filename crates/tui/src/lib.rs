@@ -59,6 +59,7 @@ impl Tui {
             });
             app.help_state
                 .set_number_of_sections(help.number_of_sections());
+            let error = app.state.get_error().map(|error| error.to_string());
             let scroll_offset = app.scroll_state.get_offset();
             let log_lines = get_logs(app);
             let pending_key = app.state.pending_key;
@@ -66,6 +67,7 @@ impl Tui {
                 log_lines,
                 scroll_offset,
                 pending_key,
+                error,
             };
             ui::render(frame, app, help.clone(), monitor);
         })?;

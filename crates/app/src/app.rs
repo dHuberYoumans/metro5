@@ -147,7 +147,16 @@ impl App {
 
     fn handle_enter(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
         let cmd: Option<AppCommand> = match self.state.mode {
-            Mode::Command => self.state.command.get_cmd(),
+            Mode::Command => {
+                let cmd = self.state.command.get_cmd();
+                match cmd {
+                    Ok(value) => value,
+                    Err(err) => {
+                        self.state.error = Some(err);
+                        None
+                    }
+                }
+            }
             Mode::Search => self
                 .state
                 .query

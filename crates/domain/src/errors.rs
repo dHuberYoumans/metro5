@@ -5,7 +5,7 @@ pub enum DomainError {
     #[error("invalid log level")]
     InvalidLogLevel,
 
-    #[error("invalid filter expression")]
+    #[error("invalid filter")]
     InvalidFilter,
 }
 

@@ -1,4 +1,4 @@
-use crate::{commands::*, queries::Query};
+use crate::{commands::*, errors::ApplicationError, queries::Query};
 use domain::entities::*;
 
 #[derive(Debug, Default)]
@@ -12,6 +12,7 @@ pub struct AppState {
     pub command: Command,
     pub pending_key: PendingKey,
     pub path: Option<String>,
+    pub error: Option<ApplicationError>,
 }
 
 impl AppState {
@@ -51,6 +52,7 @@ impl AppState {
         self.reset_filter();
         self.set_mode(Mode::Normal);
         self.pending_key.reset();
+        self.error = None;
     }
 
     pub fn apply_query(&mut self) {
@@ -65,6 +67,10 @@ impl AppState {
 
     pub fn set_path(&mut self, path: String) {
         self.path = Some(path);
+    }
+
+    pub fn get_error(&self) -> Option<&ApplicationError> {
+        self.error.as_ref()
     }
 }
 

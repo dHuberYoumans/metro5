@@ -11,28 +11,22 @@ pub(crate) fn level_style(level: &LogLevel) -> Style {
     }
 }
 
-pub(crate) fn title_style() -> Style {
-    Style::default().bold().fg(Color::Indexed(214)) // 8-bit orange
-}
+pub(crate) const TITLE_STYLE: Style = Style::new().bold().fg(Color::Indexed(214)); // 8-bit orange
 
-pub(crate) fn command_line_style() -> Style {
-    Style::default().fg(Color::Indexed(214)) // 8-bit orange
-}
+pub(crate) const COMMAND_LINE_STYLE: Style = Style::new().fg(Color::Indexed(214)); // 8-bit orange
 
-pub(crate) fn border_style() -> Style {
-    Style::default().fg(Color::Blue).bold() // 8-bit blue
-}
+pub(crate) const BORDER_STYLE: Style = Style::new().bold().fg(Color::Blue); // 8-bit blue
 
 pub const SEARCH_RESULT_STYLE: Style = Style::new().bg(Color::Yellow);
 
-pub(crate) fn pending_key_style() -> Style {
-    Style::default().fg(Color::Blue)
-}
+pub(crate) const PENDING_KEY_STYLE: Style = Style::new().fg(Color::Blue);
 
-pub const HELP_BLOCK_STYLE: Style = Style::new().bg(Color::DarkGray);
+pub(crate) const ERROR_STYLE: Style = Style::new().fg(Color::LightRed);
 
-pub const HELP_TITLE_STYLE: Style = Style::new().bold();
+pub(crate) const HELP_BLOCK_STYLE: Style = Style::new().bg(Color::DarkGray);
 
-pub const HELP_SELECTED_STYLE: Style = Style::new().fg(Color::White);
+pub(crate) const HELP_TITLE_STYLE: Style = Style::new().bold();
 
-pub const HELP_HIGHLIGHT_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);
+pub(crate) const HELP_SELECTED_STYLE: Style = Style::new().fg(Color::White);
+
+pub(crate) const HELP_HIGHLIGHT_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);

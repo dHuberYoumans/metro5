@@ -26,9 +26,9 @@ impl Command {
         &self.raw
     }
 
-    pub fn get_cmd(&mut self) -> Option<AppCommand> {
-        let _ = self.parse();
-        self.cmd.clone()
+    pub fn get_cmd(&mut self) -> Result<Option<AppCommand>, ApplicationError> {
+        self.parse()?;
+        Ok(self.cmd.clone())
     }
 
     pub fn get_raw_len(&self) -> usize {
