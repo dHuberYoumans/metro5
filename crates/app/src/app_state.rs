@@ -7,7 +7,7 @@ pub struct AppState {
     pub filter: Option<Filter>,
     pub filtered: Vec<LogEntry>,
     pub query: Query,
-    pub query_result: Vec<LogEntry>,
+    pub query_results: Vec<LogEntry>,
     pub mode: Mode,
     pub command: Command,
     pub pending_key: PendingKey,
@@ -57,7 +57,7 @@ impl AppState {
 
     pub fn apply_query(&mut self) {
         if let Some(result) = self.query.apply(&self.logs) {
-            self.query_result = result;
+            self.query_results = result;
         }
     }
 

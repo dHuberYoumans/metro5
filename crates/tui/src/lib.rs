@@ -51,13 +51,18 @@ impl Tui {
     pub fn draw(&mut self, app: &mut App) -> Result<(), TuiError> {
         self.terminal.draw(|frame| {
             let help = Help::new(" Help ");
+            let inner = Monitor::get_inner_area(frame.area());
             app.scroll_state.set_page_size(Size {
-                width: frame.area().width,
-                height: frame.area().height,
+                width: inner.width,
+                height: inner.height,
             });
             app.scroll_state.set_size(Size {
                 width: frame.area().width,
-                height: app.state.logs.len() as u16,
+                height: if app.state.filter.is_some() {
+                    app.state.filtered.len() as u16
+                } else {
+                    app.state.logs.len() as u16
+                },
             });
             app.help_state
                 .set_number_of_sections(help.number_of_sections());
@@ -80,10 +85,10 @@ impl Tui {
 }
 
 fn get_logs(app: &App) -> Vec<Line<'_>> {
-    let logs = if let Some(_filter) = app.state.filter {
+    let logs = if app.state.filter.is_some() {
         &app.state.filtered
     } else if app.state.query.is_some() {
-        &app.state.query_result
+        &app.state.query_results
     } else {
         &app.state.logs
     };

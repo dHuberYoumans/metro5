@@ -54,8 +54,15 @@ impl App {
                 self.scroll_state.scroll_down_by_half_page()
             }
             Scroll::Next => {
+                let log_count = if self.state.filter.is_some() {
+                    self.state.filtered.len()
+                } else if self.state.query.is_some() {
+                    self.state.query_results.len()
+                } else {
+                    self.state.logs.len()
+                };
                 if let Some(size) = self.scroll_state.get_page_size()
-                    && self.state.logs.len() as u16 > size.height
+                    && log_count as u16 > size.height
                 {
                     self.scroll_state.scroll_down()
                 }
@@ -145,6 +152,8 @@ impl App {
             }
             _ => self.state.clear_state(),
         }
+        self.scroll_state.enable_auto_scroll();
+        self.scroll_state.scroll_to_bottom();
         Ok(None)
     }
 

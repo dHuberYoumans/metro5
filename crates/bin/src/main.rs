@@ -1,4 +1,4 @@
-use app::commands::HelpCommand;
+use app::commands::{HelpCommand, Scroll};
 use app::{app::*, commands::AppCommand, ports::MetroController};
 use infra::*;
 use metro5::errors::MainError;
@@ -40,18 +40,23 @@ async fn run(
                     app.state.set_filter(filter);
                     app.state.apply_filter();
                     app.scroll_state.scroll_to_top();
+                    app.scroll_state.enable_auto_scroll();
                 }
-                AppCommand::ResetFilter => app.state.reset_filter(),
+                AppCommand::ResetFilter => {
+                    app.state.reset_filter();
+                    app.scroll(Scroll::Bottom);
+                }
                 AppCommand::SetQuery(query) => {
                     app.state.set_query(query);
                     app.state.apply_query();
                     app.scroll_state.scroll_to_top();
+                    app.scroll_state.enable_auto_scroll();
                 }
-                AppCommand::ResetQuery => app.state.reset_query(),
-                AppCommand::ClearState => {
-                    app.state.clear_state();
+                AppCommand::ResetQuery => {
+                    app.state.reset_query();
+                    app.scroll(Scroll::Bottom);
                 }
-                AppCommand::QuitApp => break,
+                AppCommand::ClearState => app.state.clear_state(),
                 AppCommand::ShowHelp => app.state.show_help(),
                 AppCommand::Scroll(scroll_direction) => app.scroll(scroll_direction),
                 AppCommand::HelpMenu(HelpCommand::SelectNext) => app.help_state.select_next(),
@@ -86,6 +91,7 @@ async fn run(
                         todo!("implement allert: no path found");
                     }
                 }
+                AppCommand::QuitApp => break,
             }
         };
         tui.draw(&mut app)?;

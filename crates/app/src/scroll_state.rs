@@ -70,7 +70,7 @@ impl ScrollState {
         let page_height = self.page_size.map_or(0, |page_size| page_size.height);
         let bottom = self
             .size
-            .map_or(u16::MAX, |size| size.height.saturating_sub(page_height - 1));
+            .map_or(u16::MAX, |size| size.height.saturating_sub(page_height));
         self.offset.y = bottom;
     }
 
@@ -78,7 +78,7 @@ impl ScrollState {
         let page_height = self.page_size.map_or(0, |page_size| page_size.height);
         let bottom = self
             .size
-            .map_or(u16::MAX, |size| size.height.saturating_sub(page_height - 1));
+            .map_or(u16::MAX, |size| size.height.saturating_sub(page_height));
         Offset {
             x: self.offset.x,
             y: bottom,

@@ -54,6 +54,17 @@ impl Widget for Monitor<'_> {
     }
 }
 
+impl Monitor<'_> {
+    pub fn get_inner_area(area: Rect) -> Rect {
+        let block = Block::bordered()
+            .title(Line::default())
+            .title_top(Line::default())
+            .title_bottom(Line::default())
+            .title_bottom(Line::default());
+        block.inner(area)
+    }
+}
+
 #[derive(Debug, Default)]
 pub(crate) struct Commandline {
     pub title: String,
