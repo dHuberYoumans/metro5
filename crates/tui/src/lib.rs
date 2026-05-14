@@ -3,7 +3,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{
-    Terminal,
+    Frame, Terminal,
     prelude::CrosstermBackend,
     text::{Line, Span},
 };
@@ -51,36 +51,44 @@ impl Tui {
     pub fn draw(&mut self, app: &mut App) -> Result<(), TuiError> {
         self.terminal.draw(|frame| {
             let help = Help::new(" Help ");
-            let inner = Monitor::get_inner_area(frame.area());
-            app.scroll_state.set_page_size(Size {
-                width: inner.width,
-                height: inner.height,
-            });
-            app.scroll_state.set_size(Size {
-                width: frame.area().width,
-                height: if app.state.filter.is_some() {
-                    app.state.filtered.len() as u16
-                } else {
-                    app.state.logs.len() as u16
-                },
-            });
-            app.help_state
-                .set_number_of_sections(help.number_of_sections());
-            let error = app.state.get_error().map(|error| error.to_string());
-            let scroll_offset = app.scroll_state.get_offset();
-            let log_lines = get_logs(app);
-            let pending_key = app.state.pending_key;
-            let log_level = app.state.filter.map(|Filter::Level(log_level)| log_level);
-            let monitor = Monitor {
-                log_lines,
-                scroll_offset,
-                pending_key,
-                error,
-                log_level,
-            };
+            update_app_state(app, help.number_of_sections(), frame);
+            let monitor = set_up_monitor(app);
             ui::render(frame, app, help.clone(), monitor);
         })?;
         Ok(())
+    }
+}
+
+fn update_app_state(app: &mut App, number_of_help_sections: usize, frame: &Frame) {
+    let inner = Monitor::get_inner_area(frame.area());
+    app.scroll_state.set_page_size(Size {
+        width: inner.width,
+        height: inner.height,
+    });
+    app.scroll_state.set_size(Size {
+        width: frame.area().width,
+        height: if app.state.filter.is_some() {
+            app.state.filtered.len() as u16
+        } else {
+            app.state.logs.len() as u16
+        },
+    });
+    app.help_state
+        .set_number_of_sections(number_of_help_sections);
+}
+
+fn set_up_monitor<'a>(app: &'a App) -> Monitor<'a> {
+    let error = app.state.get_error().map(|error| error.to_string());
+    let scroll_offset = app.scroll_state.get_offset();
+    let log_lines = get_logs(app);
+    let pending_key = app.state.pending_key;
+    let log_level = app.state.filter.map(|Filter::Level(log_level)| log_level);
+    Monitor {
+        log_lines,
+        scroll_offset,
+        pending_key,
+        error,
+        log_level,
     }
 }
 

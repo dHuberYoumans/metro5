@@ -1,4 +1,4 @@
-use app::commands::{HelpCommand, Scroll};
+use app::commands::HelpCommand;
 use app::{app::*, commands::AppCommand, ports::MetroController};
 use infra::*;
 use metro5::errors::MainError;
@@ -44,7 +44,6 @@ async fn run(
                 }
                 AppCommand::ResetFilter => {
                     app.state.reset_filter();
-                    app.scroll(Scroll::Bottom);
                 }
                 AppCommand::SetQuery(query) => {
                     app.state.set_query(query);
@@ -54,7 +53,6 @@ async fn run(
                 }
                 AppCommand::ResetQuery => {
                     app.state.reset_query();
-                    app.scroll(Scroll::Bottom);
                 }
                 AppCommand::ClearState => app.state.clear_state(),
                 AppCommand::ShowHelp => app.state.show_help(),
