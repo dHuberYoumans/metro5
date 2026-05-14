@@ -1,7 +1,8 @@
 use crate::styles::{
-    BORDER_STYLE, COMMAND_LINE_STYLE, ERROR_STYLE, PENDING_KEY_STYLE, TITLE_STYLE,
+    BORDER_STYLE, COMMAND_LINE_STYLE, ERROR_STYLE, PENDING_KEY_STYLE, TITLE_STYLE, level_style,
 };
 use app::{app_state::PendingKey, scroll_state::Offset};
+use domain::entities::LogLevel;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -15,6 +16,7 @@ pub(crate) struct Monitor<'a> {
     pub scroll_offset: Offset,
     pub pending_key: PendingKey,
     pub error: Option<String>,
+    pub log_level: Option<LogLevel>,
 }
 
 impl Widget for Monitor<'_> {
@@ -23,6 +25,11 @@ impl Widget for Monitor<'_> {
         Self: Sized,
     {
         let title = Line::from(Span::styled(" Metro 5 ", TITLE_STYLE));
+        let log_level = if let Some(level) = self.log_level {
+            Line::from(Span::styled(format!(" {} ", level), level_style(&level)))
+        } else {
+            Line::default()
+        };
         let pending_key = if let Some(key) = self.pending_key.get() {
             Line::from(Span::styled(format!(" {} ", key), PENDING_KEY_STYLE))
         } else {
@@ -35,6 +42,7 @@ impl Widget for Monitor<'_> {
         };
         let block = Block::bordered()
             .title(title.right_aligned())
+            .title_top(log_level.left_aligned())
             .title_bottom(pending_key.right_aligned())
             .title_bottom(error.left_aligned())
             .border_set(border::ROUNDED)

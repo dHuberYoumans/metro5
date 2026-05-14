@@ -10,6 +10,8 @@ use ratatui::{
 use std::io::Stdout;
 use strip_ansi_escapes::strip;
 
+use domain::entities::Filter;
+
 use crate::{
     errors::TuiError,
     help::Help,
@@ -63,11 +65,13 @@ impl Tui {
             let scroll_offset = app.scroll_state.get_offset();
             let log_lines = get_logs(app);
             let pending_key = app.state.pending_key;
+            let log_level = app.state.filter.map(|Filter::Level(log_level)| log_level);
             let monitor = Monitor {
                 log_lines,
                 scroll_offset,
                 pending_key,
                 error,
+                log_level,
             };
             ui::render(frame, app, help.clone(), monitor);
         })?;

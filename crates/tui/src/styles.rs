@@ -3,7 +3,7 @@ use ratatui::style::{Color, Modifier, Style};
 
 pub(crate) fn level_style(level: &LogLevel) -> Style {
     match level {
-        LogLevel::Info => Style::default().fg(Color::Cyan),
+        LogLevel::Info => Style::default().fg(Color::Blue),
         LogLevel::Warn => Style::default().fg(Color::Yellow),
         LogLevel::Error => Style::default().fg(Color::Red),
         LogLevel::Log => Style::default().fg(Color::LightGreen),
