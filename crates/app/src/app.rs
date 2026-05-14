@@ -105,6 +105,7 @@ impl App {
                 _ => self.handle_enter(),
             },
             Key::Tab => self.handle_tab(),
+            Key::ShiftTab => self.handle_shift_tab(),
             Key::Char(ch) => self.handle_char_input(ch),
         }
     }
@@ -191,6 +192,19 @@ impl App {
                 LogLevel::Error => Ok(Some(AppCommand::ResetFilter)),
             },
             None => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Info)))),
+        }
+    }
+
+    fn handle_shift_tab(&self) -> Result<Option<AppCommand>, ApplicationError> {
+        match self.state.filter {
+            Some(Filter::Level(level)) => match level {
+                LogLevel::None => Ok(None),
+                LogLevel::Info => Ok(Some(AppCommand::ResetFilter)),
+                LogLevel::Log => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Info)))),
+                LogLevel::Warn => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Log)))),
+                LogLevel::Error => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Warn)))),
+            },
+            None => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Error)))),
         }
     }
 
