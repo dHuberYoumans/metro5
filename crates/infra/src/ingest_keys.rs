@@ -34,6 +34,7 @@ fn resolve_key(key: KeyEvent) -> Option<ProcessEvent> {
         KeyCode::Backspace => Key::Backspace,
         KeyCode::Enter => Key::Enter,
         KeyCode::Esc => Key::Esc,
+        KeyCode::Tab => Key::Tab,
         _ => return None,
     };
     Some(ProcessEvent::Key(key))

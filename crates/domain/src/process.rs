@@ -22,6 +22,7 @@ pub enum Key {
     Backspace,
     Enter,
     Esc,
+    Tab,
     CtrlC,
     CtrlU,
     CtrlD,

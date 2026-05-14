@@ -7,6 +7,7 @@ use crate::{
     scroll_state::ScrollState,
 };
 use domain::{
+    entities::{Filter, LogLevel},
     parse_log,
     process::{Key, ProcessEvent, StreamKind},
 };
@@ -103,6 +104,7 @@ impl App {
                 Mode::Normal => Ok(None),
                 _ => self.handle_enter(),
             },
+            Key::Tab => self.handle_tab(),
             Key::Char(ch) => self.handle_char_input(ch),
         }
     }
@@ -179,6 +181,19 @@ impl App {
         Ok(cmd)
     }
 
+    fn handle_tab(&self) -> Result<Option<AppCommand>, ApplicationError> {
+        match self.state.filter {
+            Some(Filter::Level(level)) => match level {
+                LogLevel::None => Ok(None),
+                LogLevel::Info => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Log)))),
+                LogLevel::Log => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Warn)))),
+                LogLevel::Warn => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Error)))),
+                LogLevel::Error => Ok(Some(AppCommand::ResetFilter)),
+            },
+            None => Ok(Some(AppCommand::SetFilter(Filter::Level(LogLevel::Info)))),
+        }
+    }
+
     fn handle_char_input(&mut self, ch: char) -> Result<Option<AppCommand>, ApplicationError> {
         match self.state.mode {
             Mode::Command => {
@@ -249,7 +264,7 @@ impl Default for App {
 mod tests {
     use super::*;
     use crate::scroll_state::Offset;
-    use domain::{entities::*, errors::DomainError};
+    use domain::errors::DomainError;
 
     #[test]
     fn it_should_request_quit() {
