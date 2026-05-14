@@ -58,7 +58,7 @@ async fn run(
                 AppCommand::HelpMenu(HelpCommand::SelectPrev) => app.help_state.select_previous(),
                 AppCommand::HelpMenu(HelpCommand::ExpandSection) => app.help_state.expand_section(),
                 AppCommand::HelpMenu(HelpCommand::CollapseSection) => {
-                    app.help_state.collase_section()
+                    app.help_state.collapse_section()
                 }
                 AppCommand::WriteToFile(path) => {
                     app.state.set_path(path.clone());

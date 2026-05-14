@@ -166,7 +166,7 @@ impl App {
                 .map(|query| AppCommand::SetQuery(query.to_string())),
             Mode::Help => {
                 if self.help_state.get_expanded().is_some() {
-                    self.help_state.collase_section();
+                    self.help_state.collapse_section();
                     Some(AppCommand::HelpMenu(HelpCommand::CollapseSection))
                 } else {
                     self.help_state.expand_section();

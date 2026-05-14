@@ -22,7 +22,7 @@ impl HelpState {
         self.expanded = Some(self.selected);
     }
 
-    pub fn collase_section(&mut self) {
+    pub fn collapse_section(&mut self) {
         self.expanded = None;
     }
 
